@@ -21,7 +21,6 @@ on:
 env:
   DOCKER_REGISTRY: docker.io
   IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
-  TARGET_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
 
 jobs:
   build:
@@ -77,16 +76,18 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    environment: ${{ env.TARGET_ENVIRONMENT }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Deploy to selected environment
+        env:
+          TARGET_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
         run: |
           echo "Workflow triggered by: ${{ github.event_name }}"
           echo "Build tag: ${{ github.sha }}"
-          echo "Deployment target: ${{ env.TARGET_ENVIRONMENT }}"
+          echo "Deployment target: $TARGET_ENVIRONMENT"
           echo "This workflow can be used for dev, uat, sit, nft, preprod, or prod."
 
       - name: Environment note
