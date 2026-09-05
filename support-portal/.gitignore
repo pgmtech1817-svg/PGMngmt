@@ -1,0 +1,10 @@
+.env
+secrets/EXPORT_SECRETS.csv
+secrets/EXPORT_SECRETS_encrypted.csv
+secrets/*.csv
+*.log
+target/
+**/target/
+.DS_Store
+node_modules/
+frontend/build

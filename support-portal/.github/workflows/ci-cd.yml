@@ -1,0 +1,81 @@
+name: CI/CD Build and Deploy
+
+on:
+  push:
+    branches:
+      - uat
+      - sit
+      - nft
+      - preprod
+      - main
+
+env:
+  DOCKER_REGISTRY: docker.io
+  IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, pg-service, frontend]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      if: matrix.service != 'frontend'
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Node
+      if: matrix.service == 'frontend'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Build Maven package (Java services)
+      if: matrix.service != 'frontend'
+      working-directory: ./backend-services/${{ matrix.service }}
+      run: mvn -B package --file pom.xml -DskipTests
+
+    - name: Check required secrets
+      run: |
+        if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+          echo "Required Docker Hub secrets (DOCKERHUB_USERNAME / DOCKERHUB_TOKEN) are not set in repository secrets. Please add them in Settings -> Secrets and variables -> Actions.";
+          exit 1;
+        fi
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ matrix.service == 'frontend' && (format('./{0}', matrix.service)) || format('./backend-services/{0}', matrix.service) }}
+        file: ${{ matrix.service == 'frontend' && './frontend/Dockerfile' || format('./backend-services/{0}/Dockerfile', matrix.service) }}
+        push: true
+        tags: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:${{ github.ref_name }}
+        build-args: |
+          JAR_FILE=target/*.jar
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || (github.ref == 'refs/heads/preprod' && 'preprod') || (github.ref == 'refs/heads/uat' && 'uat') || (github.ref == 'refs/heads/sit' && 'sit') || (github.ref == 'refs/heads/nft' && 'nft') }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Deploy (placeholder)
+      run: |
+        echo "Deployment step placeholder. Configure deployment to your environment here."
+
+    - name: Instructions
+      run: |
+        echo "To finish deployment: create Kubernetes manifests or SSH deploy scripts and use secrets (KUBE_CONFIG_UAT, KUBE_CONFIG_SIT, KUBE_CONFIG_NFT, KUBE_CONFIG_PREPROD, KUBE_CONFIG_PROD) or SSH keys."

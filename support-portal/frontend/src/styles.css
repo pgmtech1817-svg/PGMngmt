@@ -1,0 +1,21 @@
+*{box-sizing:border-box;font-family:Segoe UI, Roboto, Arial, sans-serif}
+body{margin:0;background:#f5f7fb;color:#111}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:#1f2937;color:#fff}
+.brand{margin:0;font-size:18px}
+.app-header nav a{color:#fff;margin-right:12px;text-decoration:none}
+.app-header .btn-link{background:none;border:none;color:#fff;cursor:pointer}
+.container{padding:20px;max-width:1100px;margin:20px auto}
+.auth-card{max-width:420px;margin:40px auto;padding:20px;background:#fff;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.auth-card form label{display:block;margin-top:10px}
+.auth-card input, .auth-card textarea{width:100%;padding:8px;margin-top:6px;border:1px solid #ddd;border-radius:4px}
+.btn{background:#2563eb;color:#fff;padding:8px 12px;border:none;border-radius:4px;cursor:pointer;margin-top:12px}
+.card{background:#fff;padding:16px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:12px}
+.grid{display:flex;gap:12px}
+.grid .card{flex:1}
+.two-col{display:flex;gap:12px}
+.two-col > div{flex:1}
+.table{width:100%;border-collapse:collapse}
+.table th, .table td{border-bottom:1px solid #eee;padding:8px;text-align:left}
+.error{color:#b00020;margin-top:8px}
+.app-footer{text-align:center;padding:12px;color:#666;margin-top:40px}
+@media(max-width:800px){.grid,.two-col{flex-direction:column}}
