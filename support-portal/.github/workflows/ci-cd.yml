@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [auth-service, pg-service, frontend]
+        service: [auth-service, pg-service, occupant-service, payment-service, notification-service, scheduler-service, frontend]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
