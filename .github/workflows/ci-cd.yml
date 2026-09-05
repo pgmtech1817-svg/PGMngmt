@@ -18,7 +18,6 @@ on:
 
 env:
   DOCKER_REGISTRY: docker.io
-  IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
 
 jobs:
   build:
@@ -68,8 +67,8 @@ jobs:
           file: ${{ matrix.service == 'frontend' && './support-portal/frontend/Dockerfile' || format('./support-portal/backend-services/{0}/Dockerfile', matrix.service) }}
           push: true
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:${{ github.ref_name }}
-            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.ref_name }}
+            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
 
   deploy:
     needs: build
