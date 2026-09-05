@@ -16,7 +16,6 @@ on:
           - sit
           - nft
           - preprod
-          - prod
 
 env:
   DOCKER_REGISTRY: docker.io
