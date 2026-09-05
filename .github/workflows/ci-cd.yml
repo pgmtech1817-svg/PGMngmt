@@ -24,12 +24,21 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     strategy:
       matrix:
         service: [auth-service, pg-service, frontend]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          TAG_NAME=$(echo "$BRANCH_NAME" | tr '/' '-')
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
       - name: Set up JDK 17
         if: matrix.service != 'frontend'
@@ -50,25 +59,25 @@ jobs:
         run: mvn -B package --file pom.xml -DskipTests
 
       - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
+        if: ${{ env.DOCKERHUB_USERNAME && env.DOCKERHUB_TOKEN }}
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
-        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
+        if: ${{ env.DOCKERHUB_USERNAME && env.DOCKERHUB_TOKEN }}
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.service == 'frontend' && './support-portal/frontend' || format('./support-portal/backend-services/{0}', matrix.service) }}
           file: ${{ matrix.service == 'frontend' && './support-portal/frontend/Dockerfile' || format('./support-portal/backend-services/{0}/Dockerfile', matrix.service) }}
           push: true
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ replace(github.ref_name, '/', '-') }}
-            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ env.TAG_NAME }}
+            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
 
       - name: Skipping Docker push (no secrets)
-        if: ${{ !secrets.DOCKERHUB_USERNAME || !secrets.DOCKERHUB_TOKEN }}
+        if: ${{ !env.DOCKERHUB_USERNAME || !env.DOCKERHUB_TOKEN }}
         run: echo "DOCKERHUB_USERNAME / DOCKERHUB_TOKEN not set — skipping Docker login and image push. Builds completed."
   deploy:
     needs: build
