@@ -5,14 +5,27 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select deployment environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - sit
+          - nft
+          - preprod
+          - prod
 
 env:
   DOCKER_REGISTRY: docker.io
   IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
+  TARGET_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -60,22 +73,22 @@ jobs:
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:${{ github.sha }}
 
-  deploy-dev:
+  deploy:
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    environment: dev
+    environment: ${{ env.TARGET_ENVIRONMENT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy after merge to main
+      - name: Deploy to selected environment
         run: |
-          echo "Merge to main triggered the pipeline."
+          echo "Workflow triggered by: ${{ github.event_name }}"
           echo "Build tag: ${{ github.sha }}"
-          echo "Deployment target: DEV"
-          echo "This is the default environment for merged changes."
+          echo "Deployment target: ${{ env.TARGET_ENVIRONMENT }}"
+          echo "This workflow can be used for dev, uat, sit, nft, preprod, or prod."
 
-      - name: Deployment note
+      - name: Environment note
         run: |
-          echo "For UAT / Preprod / Prod, configure GitHub Environments with approval gates and environment secrets."
+          echo "If you want approval gates, configure GitHub Environments in Settings > Environments and add required reviewers to prod and preprod."
