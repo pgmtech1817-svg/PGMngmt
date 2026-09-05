@@ -73,8 +73,15 @@ jobs:
           file: ${{ matrix.service == 'frontend' && './support-portal/frontend/Dockerfile' || format('./support-portal/backend-services/{0}/Dockerfile', matrix.service) }}
           push: true
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ env.TAG_NAME }}
-            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ env.TAG_NAME }}
+            ${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+
+      - name: Show computed tags (debug)
+        if: ${{ env.DOCKERHUB_USERNAME && env.DOCKERHUB_TOKEN }}
+        run: |
+          echo "Computed tags:"
+          echo "${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ env.TAG_NAME }}"
+          echo "${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}"
 
       - name: Skipping Docker push (no secrets)
         if: ${{ !env.DOCKERHUB_USERNAME || !env.DOCKERHUB_TOKEN }}
