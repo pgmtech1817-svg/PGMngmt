@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Maven package (Java services)
         if: matrix.service != 'frontend'
-        working-directory: ./backend-services/${{ matrix.service }}
+        working-directory: ./support-portal/backend-services/${{ matrix.service }}
         run: mvn -B package --file pom.xml -DskipTests
 
       - name: Log in to Docker Hub
@@ -55,12 +55,10 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.service == 'frontend' && './frontend' || format('./backend-services/{0}', matrix.service) }}
-          file: ${{ matrix.service == 'frontend' && './frontend/Dockerfile' || format('./backend-services/{0}/Dockerfile', matrix.service) }}
+          context: ${{ matrix.service == 'frontend' && './support-portal/frontend' || format('./support-portal/backend-services/{0}', matrix.service) }}
+          file: ${{ matrix.service == 'frontend' && './support-portal/frontend/Dockerfile' || format('./support-portal/backend-services/{0}/Dockerfile', matrix.service) }}
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:${{ github.sha }}
-          build-args: |
-            JAR_FILE=target/*.jar
 
   deploy-dev:
     needs: build
@@ -80,4 +78,4 @@ jobs:
 
       - name: Deployment note
         run: |
-          echo "For higher environments, configure GitHub Environments with approval gates and environment secrets."
+          echo "For UAT / Preprod / Prod, configure GitHub Environments with approval gates and environment secrets."
