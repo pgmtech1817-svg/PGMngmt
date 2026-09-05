@@ -64,7 +64,7 @@ jobs:
           file: ${{ matrix.service == 'frontend' && './support-portal/frontend/Dockerfile' || format('./support-portal/backend-services/{0}/Dockerfile', matrix.service) }}
           push: true
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.ref_name }}
+            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ replace(github.ref_name, '/', '-') }}
             ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
 
       - name: Skipping Docker push (no secrets)
